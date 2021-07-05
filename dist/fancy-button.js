@@ -3,7 +3,7 @@
   var FancyButton = class extends HTMLElement {
     constructor() {
       super();
-      const shadow = this.attachShadow({ mode: "open" });
+      this.shadow = this.attachShadow({ mode: "open" });
       this.props = {};
       this.dev = this.hasAttribute("dev");
       this.animationSpeed = this.hasAttribute("animation-speed") ? this.getAttribute("animation-speed") : "0.1";
@@ -14,7 +14,12 @@
         disableElevation: this.hasAttribute("disable-elevation"),
         outlined: this.hasAttribute("outlined"),
         variant: this.getAttribute("variant"),
-        lowercase: this.hasAttribute("lowercase")
+        lowercase: this.hasAttribute("lowercase"),
+        fancy: this.hasAttribute("fancy"),
+        gradient: this.hasAttribute("gradient"),
+        gradientDirection: this.getAttribute("gradient-direction"),
+        gradientOne: this.getAttribute("gradient-1"),
+        gradientTwo: this.getAttribute("gradient-2")
       };
       console.log(this.options);
       const style = document.createElement("style");
@@ -22,7 +27,7 @@
             :host {
                 display: inline-block;
                 border: none;
-                border-radius: 0.5em;
+                border-radius: 0.25rem;
                 box-shadow: 0 2px 3px rgba(0,0,0,0.7);
                 font-weight: normal;
                 text-transform: ${this.options.lowercase ? "none" : "UpperCase"};
@@ -30,11 +35,14 @@
                 letter-spacing: 2px;
                 background: none;
                 cursor: pointer;
-                padding: 0.5em;
-                min-width: 65px;
+                padding: 1em 2em;
+                min-width: 120px;
                 text-align: center;
                 user-select: none;
                 transition: transform 0.1s ease-in-out, box-shadow 0.2s ease-in-out;
+                position: relative;
+                overflow: hidden;
+                margin: 0.2em;
             }
 
             :host:active {
@@ -48,13 +56,7 @@
                 transition: transform ${this.animationSpeed}s ease-in-out, box-shadow ${parseInt(this.animationSpeed + 0.1)}s ease-in-out;
             }
 
-            
-            span {
-                display: inherit;
-                padding: 0.5em;
-                width: 100%;
-                height: 100%;
-            }
+        
 
             :host(.standard) {
                 background: #999999;
@@ -77,6 +79,28 @@
                 pointer-events: none;
                 box-shadow: none;
                 transform: none;
+            }
+
+            :host(.fancy) {
+                overflow: hidden;
+                transition: background 400ms;
+                box-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.3);
+
+            }
+
+            .ripple {
+                position: absolute;
+                border-radius: 50%;
+                transform: scale(0);
+                animation: rippleEffect 600ms linear;
+                background: rgba(255,255,255,0.5);
+            }
+
+            @keyframes rippleEffect {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
             }
 
             :host(.custom) {
@@ -121,11 +145,35 @@
                 color: ${this.options.background};
             }
 
+            :host(.gradient) {
+                background: linear-gradient(${this.options.gradientDirection}, ${this.options.gradientOne}, ${this.options.gradientTwo});
+                color: ${this.getAttribute("color")};
+            }
+
+            :host(.gradient)
+
+            @media only screen and (max-width: 500px) {
+                :host {
+                    min-width: auto;
+                    font-size: calc(16px + 6 * ((100vw - 320px) / 680));
+                }
+            }
+
+            @media only screen and (min-width: 1000px) {
+                :host {
+                    font-size: 22px;
+                    
+                }
+            }
+
             
         `;
       this.content = document.createTextNode(this.getAttribute("text"));
-      shadow.appendChild(this.content);
-      [style, this.content].forEach((e) => shadow.appendChild(e));
+      this.shadow.appendChild(this.content);
+      if (this.options.fancy) {
+        this.addEventListener("click", (e) => this.ripple(e));
+      }
+      [style, this.content].forEach((e) => this.shadow.appendChild(e));
     }
     getProps() {
       for (let i = 0; i < this.attributes.length; i++) {
@@ -145,9 +193,11 @@
         this.classList.add("disable-elevation");
       if (this.options.outlined)
         this.classList.add(`${this.options.variant}-outlined`);
+      if (this.hasAttribute("fancy"))
+        this.classList.add("fancy");
     }
     handleVariant(variant) {
-      switch (variant) {
+      switch (variant.toLowerCase()) {
         case "standard": {
           this.classList.add("standard");
           break;
@@ -169,6 +219,13 @@
           this.classList.add("custom");
           break;
         }
+        case "fancy": {
+          this.classList.add("fancy");
+          break;
+        }
+        case "gradient": {
+          this.classList.add("gradient");
+        }
         default: {
           this.classList.add("standard");
           break;
@@ -187,6 +244,26 @@
       for (const [key, value] in Object.entries(options)) {
         this.style[key] = value;
       }
+    }
+    ripple(e) {
+      let target = this;
+      let rect = target.getBoundingClientRect();
+      let circle = document.createElement("span");
+      let diam = Math.max(target.clientWidth, target.clientHeight);
+      let radius = diam / 2;
+      console.log(rect);
+      console.log(e.clientX);
+      console.log(target.offsetLeft);
+      circle.style.width = circle.style.height = `${diam}px`;
+      circle.style.left = `${e.clientX - (rect.left + radius)}px`;
+      circle.style.top = `${e.clientY - (rect.top + radius)}px`;
+      circle.classList.add("ripple");
+      console.log(this.shadow.querySelector("*"));
+      let ripple = this.shadow.querySelector(".ripple");
+      if (ripple) {
+        ripple.remove();
+      }
+      this.shadow.appendChild(circle);
     }
   };
   customElements.define("fancy-button", FancyButton);
