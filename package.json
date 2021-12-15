@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build" : "esbuild ./src/FancyButton.js --bundle --outfile=./dist/fancy-button.js --sourcemap --watch"
+    "build" : "esbuild ./src/FancyButton.js --bundle --outfile=./dist/fancy-button.js --sourcemap --watch",
+    "min": "esbuild ./src/FancyButton.js --bundle --outfile=./dist/fancy-button.min.js --minify"
   },
   "keywords": [],
   "author": "",
