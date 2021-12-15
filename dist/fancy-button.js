@@ -20,7 +20,9 @@
       const style = document.createElement("style");
       style.textContent = `
             :host {
-                display: inline-block;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 border: none;
                 border-radius: 0.5em;
                 box-shadow: 0 2px 3px rgba(0,0,0,0.7);
